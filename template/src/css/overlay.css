@@ -1,0 +1,5 @@
+/**
+ * Overlay layered on top of theme.css (copied from opencloud-eu/docs at
+ * build time). Use this to override or extend upstream styling without
+ * modifying AGPL-sourced CSS in place.
+ */

@@ -1,0 +1,95 @@
+import { themes as prismThemes } from 'prism-react-renderer';
+import type { Config } from '@docusaurus/types';
+import type * as Preset from '@docusaurus/preset-classic';
+
+const config: Config = {
+  title: '${SITE_TITLE}',
+  tagline: '${SITE_TAGLINE}',
+  favicon: 'img/favicon.svg',
+
+  url: '${SITE_URL}',
+  baseUrl: '${SITE_BASE_URL}',
+
+  organizationName: '${SITE_ORG}',
+  projectName: '${SITE_REPO}',
+
+  onBrokenLinks: 'throw',
+
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en'],
+  },
+
+  presets: [
+    [
+      'classic',
+      {
+        docs: {
+          sidebarPath: require.resolve('./sidebars.ts'),
+          routeBasePath: '/',
+          editUrl: '${SITE_GITHUB_URL}/tree/main/',
+        },
+        blog: false,
+        theme: {
+          customCss: [
+            require.resolve('./src/css/theme.css'),
+            require.resolve('./src/css/overlay.css'),
+          ],
+        },
+      } satisfies Preset.Options,
+    ],
+  ],
+
+  themeConfig: {
+    colorMode: { defaultMode: 'light' },
+    navbar: {
+      title: '${SITE_TITLE}',
+      items: [
+        { type: 'docSidebar', sidebarId: 'docs', position: 'left', label: 'Docs' },
+        { href: '${SITE_GITHUB_URL}', label: 'GitHub', position: 'right' },
+      ],
+    },
+    footer: {
+      links: [
+        {
+          title: 'Project',
+          items: [
+            { label: 'GitHub', href: '${SITE_GITHUB_URL}' },
+            { label: 'Issues', href: '${SITE_GITHUB_URL}/issues' },
+          ],
+        },
+        {
+          title: 'Ecosystem',
+          items: [
+            { label: 'OpenCloud', href: 'https://opencloud.eu/' },
+          ],
+        },
+      ],
+      copyright: `Copyright © ${new Date().getFullYear()} ${SITE_ORG}.`,
+    },
+    prism: {
+      theme: prismThemes.github,
+      darkTheme: prismThemes.dracula,
+      additionalLanguages: ['bash', 'yaml'],
+    },
+  } satisfies Preset.ThemeConfig,
+
+  themes: [
+    [
+      require.resolve('@easyops-cn/docusaurus-search-local'),
+      {
+        hashed: true,
+        language: ['en'],
+        indexBlog: false,
+      },
+    ],
+  ],
+
+  markdown: {
+    hooks: {
+      onBrokenMarkdownLinks: 'warn',
+    },
+  },
+};
+
+export default config;

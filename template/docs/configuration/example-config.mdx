@@ -1,0 +1,12 @@
+---
+sidebar_position: 2
+title: Example Configuration
+---
+
+import CodeBlock from '@theme/CodeBlock';
+import ExampleConfig from '!!raw-loader!@site/static/env-vars/@@SERVICE@@.yaml';
+
+A full example YAML configuration with every default value populated.
+Generated from `FullDefaultConfig()` in the service's defaults package.
+
+<CodeBlock language="yaml">{ExampleConfig.default || ExampleConfig}</CodeBlock>

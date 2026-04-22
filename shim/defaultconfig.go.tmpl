@@ -1,0 +1,19 @@
+package defaults
+
+import (
+	cfg "${SERVICE_MODULE}/${CONFIG_PACKAGE}"
+	svcdefaults "${SERVICE_MODULE}/${DEFAULTS_PACKAGE}"
+)
+
+// FullDefaultConfig is the entrypoint the OpenCloud docs generator expects on
+// every service. Delegates to the real default-config builder so reflection
+// walks the genuine yaml/env/desc tags on the Config struct.
+//
+// If NIL_COMMONS is enabled, clears cfg.Commons so reflection doesn't surface
+// env vars inherited from *shared.Commons (tagged yaml:"-") that the service
+// does not intentionally expose as its own config surface.
+func FullDefaultConfig() *cfg.Config {
+	c := svcdefaults.FullDefaultConfig()
+	${NIL_COMMONS_LINE}
+	return c
+}

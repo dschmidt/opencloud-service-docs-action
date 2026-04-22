@@ -1,0 +1,14 @@
+---
+sidebar_position: 1
+title: Environment Variables
+---
+
+import Envvars from '@site/static/env-vars/@@SERVICE@@_configvars.md';
+
+Every field in the service's Go config struct tagged with `env:"..."` is
+parsed at runtime by the envdecode loader. The table below is regenerated
+whenever the service's config struct changes.
+
+<small>
+  <Envvars />
+</small>

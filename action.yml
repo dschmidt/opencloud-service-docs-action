@@ -1,0 +1,64 @@
+name: Build OpenCloud service docs
+description: Generate and build service reference docs using opencloud-eu/markdown-docs-generator.
+author: metadist
+
+inputs:
+  config-path:
+    description: Path to the service's opencloud-service.yml config file (repo-relative).
+    required: false
+    default: .github/docs/opencloud-service.yml
+  output-path:
+    description: Absolute path where the built site should be placed.
+    required: false
+    default: ''
+
+outputs:
+  site-path:
+    description: Absolute path to the built Docusaurus site.
+    value: ${{ steps.build.outputs.site-path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Ensure yq is present
+      shell: bash
+      run: |
+        if ! command -v yq >/dev/null; then
+          echo "Installing yq (mikefarah v4)"
+          sudo curl -fsSL -o /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+        fi
+        yq --version
+
+    - name: Resolve service go.mod path
+      id: gomod
+      shell: bash
+      run: |
+        GO_MOD_DIR="$(yq -r '.service.go_mod_dir // "."' "${{ inputs.config-path }}")"
+        echo "go-mod-file=${GO_MOD_DIR}/go.mod" >> "$GITHUB_OUTPUT"
+        echo "go-sum-file=${GO_MOD_DIR}/go.sum" >> "$GITHUB_OUTPUT"
+
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: ${{ steps.gomod.outputs.go-mod-file }}
+        cache-dependency-path: ${{ steps.gomod.outputs.go-sum-file }}
+
+    - uses: pnpm/action-setup@v4
+      with:
+        version: 10
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        # pnpm's content-addressable store handles caching internally.
+        # Not using setup-node's cache because github.action_path contains
+        # a `./` segment that setup-node rejects, and the path would be
+        # wrong once the action is extracted to a standalone repo.
+
+    - name: Build docs
+      id: build
+      shell: bash
+      env:
+        DOCS_CONFIG: ${{ inputs.config-path }}
+        DOCS_OUTPUT: ${{ inputs.output-path }}
+      run: bash "${{ github.action_path }}/build.sh"

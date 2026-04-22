@@ -1,0 +1,10 @@
+{
+  "label": "Configuration",
+  "position": 2,
+  "collapsible": true,
+  "collapsed": false,
+  "link": {
+    "type": "generated-index",
+    "description": "Environment variables, example config, and deprecations — all generated from the service's Go source."
+  }
+}
