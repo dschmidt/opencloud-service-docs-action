@@ -18,7 +18,7 @@ script.
 
 ## Quick start
 
-1. Add `.github/docs/opencloud-service.yml` to your service repo:
+1. Add `opencloud-service.yml` to your service repo's root:
 
    ```yaml
    service:
@@ -94,7 +94,7 @@ script.
 
 | Input         | Required | Default                                  | Purpose                                             |
 |---------------|:--------:|------------------------------------------|-----------------------------------------------------|
-| `config-path` | no       | `.github/docs/opencloud-service.yml`     | Repo-relative path to the service config.           |
+| `config-path` | no       | `opencloud-service.yml`                  | Repo-relative path to the service config.           |
 | `output-path` | no       | `<repo>/.cache/service-docs/site-build`  | Where to place the built site. Absolute or relative. |
 
 ## Outputs
@@ -170,8 +170,10 @@ The template ships four pages: an overview (`intro.md`) plus the three
 generated configuration pages. Anything the service repo puts under
 `site.docs_dir` (default: the repo's `docs/` directory) is copied **over**
 the template's `docs/` tree before the site builds — docs content lives in
-the repo like any other source; only the action's config stays under
-`.github/docs/`, and build scratch goes to `.cache/service-docs/`:
+the repo like any other source. Don't put non-page files (like the action
+config) inside the overlay dir: everything there ends up in the published
+site. The config belongs at the repo root, build scratch goes to
+`.cache/service-docs/`, and `.github/` keeps only the workflow:
 
 - A file at the same relative path **replaces** the template page —
   `docs/intro.md` replaces the default overview (keep its front matter:
@@ -238,7 +240,7 @@ bootstrap script that clones this action at the SHA pinned in your workflow
 and invokes `build.sh`:
 
 ```bash
-# .github/docs/run.sh
+# dev/docs-run.sh
 #!/usr/bin/env bash
 set -euo pipefail
 REF="$(grep -oE 'dschmidt/opencloud-service-docs-action@[^ "]+' \
@@ -255,7 +257,7 @@ exec bash "$DIR/build.sh"
 ```makefile
 # Makefile
 docs:
-	bash .github/docs/run.sh
+	bash dev/docs-run.sh
 
 docs-serve-prod:
 	cd .cache/service-docs/site && pnpm run serve

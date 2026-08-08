@@ -6,7 +6,7 @@ inputs:
   config-path:
     description: Path to the service's opencloud-service.yml config file (repo-relative).
     required: false
-    default: .github/docs/opencloud-service.yml
+    default: opencloud-service.yml
   output-path:
     description: Absolute path where the built site should be placed.
     required: false

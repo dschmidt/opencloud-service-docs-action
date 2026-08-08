@@ -6,7 +6,7 @@ set -euo pipefail
 # ----- paths -----------------------------------------------------------------
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="${GITHUB_WORKSPACE:-$(git -C "$(pwd)" rev-parse --show-toplevel)}"
-CONFIG_PATH_INPUT="${DOCS_CONFIG:-.github/docs/opencloud-service.yml}"
+CONFIG_PATH_INPUT="${DOCS_CONFIG:-opencloud-service.yml}"
 # Make config path absolute relative to repo root unless already absolute.
 case "$CONFIG_PATH_INPUT" in
   /*) CONFIG_PATH="$CONFIG_PATH_INPUT" ;;
