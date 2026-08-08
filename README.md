@@ -116,7 +116,6 @@ service:
   config_package: pkg/config             # default
   defaults_package: pkg/config/defaults  # default
   readme: README.md                      # default
-  nil_commons: true                      # default — clear *shared.Commons pointer before reflection
 
 site:
   title: <required>                      # actual text content — no sensible default
@@ -146,17 +145,18 @@ differs from the runtime service name (e.g. module
 `github.com/foo/synaplan-opencloud` maps to the service named `synaplan`).
 **Set `service.name` explicitly** unless they happen to match.
 
-### About `service.nil_commons`
+### `shared.Commons` handling
 
-Services that embed `*shared.Commons` (tagged `yaml:"-"`) accidentally
+Services that embed `*shared.Commons` (tagged `yaml:"-"`) would otherwise
 surface the full OpenCloud-wide env var inventory (`OC_ADMIN_USER_ID`,
-`OC_MULTI_TENANT_ENABLED`, `REVA_TRANSFER_SECRET`, …) through reflection
-even though the service doesn't intentionally expose them.
+`OC_MULTI_TENANT_ENABLED`, `REVA_TRANSFER_SECRET`, …) through reflection even
+though the service doesn't intentionally expose them.
 
-Default `true` clears the `Commons` pointer before reflection so only the
-service's own config surface ends up in the tables.
+The generated shim zeroes a `Commons` field via reflection before the config
+is walked, but only if that field exists. Services without a `Commons` field
+need no configuration and compile fine, so there is no option to set.
 
-**Known gap:** this also hides `OC_LOG_PRETTY` / `OC_LOG_COLOR` /
+**Known gap:** zeroing `Commons` also hides `OC_LOG_PRETTY` / `OC_LOG_COLOR` /
 `OC_LOG_FILE`, which *are* consumed at runtime by `log.Configure`. Until
 upstream grows a flag that respects `yaml:"-"` on pointers, the workaround
 is to promote a `Log` section into your service's own `Config` struct.

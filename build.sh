@@ -31,7 +31,10 @@ done
 # cfg_get <yq-path> <default>
 cfg_get() {
   local v
-  v="$(yq -r "$1 // \"\"" "$CONFIG_PATH")"
+  # NB: no jq-style `// ""` fallback here — it treats a boolean `false` as
+  # empty and would silently swap it for the default. Read the raw value and
+  # handle the missing/null case explicitly instead.
+  v="$(yq -r "$1" "$CONFIG_PATH" 2>/dev/null)"
   if [ -z "$v" ] || [ "$v" = "null" ] || [ "$v" = "auto" ]; then
     printf '%s' "$2"
   else
@@ -45,7 +48,6 @@ SERVICE_NAME_IN="$(cfg_get '.service.name' '')"
 CONFIG_PACKAGE="$(cfg_get '.service.config_package' 'pkg/config')"
 DEFAULTS_PACKAGE="$(cfg_get '.service.defaults_package' 'pkg/config/defaults')"
 README_PATH="$(cfg_get '.service.readme' 'README.md')"
-NIL_COMMONS="$(cfg_get '.service.nil_commons' 'true')"
 
 SITE_TITLE="$(cfg_get '.site.title' '')"
 [ -n "$SITE_TITLE" ] || { echo "error: site.title is required in $CONFIG_PATH" >&2; exit 1; }
@@ -143,13 +145,8 @@ find "$OC_DIR/services" -mindepth 1 -maxdepth 1 -type d -exec rm -rf {} +
 # ----- step 4: render shim into pseudo-service ------------------------------
 SYN_SVC="$OC_DIR/services/$SERVICE_NAME"
 mkdir -p "$SYN_SVC/pkg/config/defaults"
-if [ "$NIL_COMMONS" = "true" ]; then
-  NIL_COMMONS_LINE="c.Commons = nil"
-else
-  NIL_COMMONS_LINE=""
-fi
-export SERVICE_MODULE CONFIG_PACKAGE DEFAULTS_PACKAGE NIL_COMMONS_LINE
-envsubst '${SERVICE_MODULE} ${CONFIG_PACKAGE} ${DEFAULTS_PACKAGE} ${NIL_COMMONS_LINE}' \
+export SERVICE_MODULE CONFIG_PACKAGE DEFAULTS_PACKAGE
+envsubst '${SERVICE_MODULE} ${CONFIG_PACKAGE} ${DEFAULTS_PACKAGE}' \
   < "$SCRIPT_DIR/shim/defaultconfig.go.tmpl" \
   > "$SYN_SVC/pkg/config/defaults/defaultconfig.go"
 
@@ -250,7 +247,11 @@ EOF
 (
   cd "$SITE_DIR"
   echo "==> pnpm install"
-  pnpm install --prefer-frozen-lockfile
+  # dangerouslyAllowAllBuilds: pnpm 10+ otherwise fails the install with
+  # ERR_PNPM_IGNORED_BUILDS for deps that ship postinstall scripts (e.g.
+  # core-js). The theme deps are pinned, so allowing their build scripts here
+  # is safe and keeps the install non-interactive.
+  pnpm install --prefer-frozen-lockfile --config.dangerouslyAllowAllBuilds=true
   echo "==> pnpm build"
   pnpm build
 )
