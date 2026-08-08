@@ -52,10 +52,18 @@ SITE_TITLE="$(cfg_get '.site.title' '')"
 [ -n "$SITE_TITLE" ] || { echo "error: site.title is required in $CONFIG_PATH" >&2; exit 1; }
 SITE_TAGLINE="$(cfg_get '.site.tagline' '')"
 SITE_ANNOUNCEMENT="$(cfg_get '.site.announcement' '')"
-DOCS_OVERLAY_IN="$(cfg_get '.site.docs_dir' '.github/docs/pages')"
+DOCS_OVERLAY_IN="$(cfg_get '.site.docs_dir' 'docs')"
 case "$DOCS_OVERLAY_IN" in
   /*) DOCS_OVERLAY_DIR="$DOCS_OVERLAY_IN" ;;
   *)  DOCS_OVERLAY_DIR="$REPO_ROOT/$DOCS_OVERLAY_IN" ;;
+esac
+# The built site must never land inside the overlay dir — the next run
+# would re-publish the generated HTML as if it were authored pages.
+case "$OUT_DIR" in
+  "$DOCS_OVERLAY_DIR"|"$DOCS_OVERLAY_DIR"/*)
+    echo "error: DOCS_OUTPUT ($OUT_DIR) lies inside the docs overlay dir ($DOCS_OVERLAY_DIR)." >&2
+    echo "       Move the build output elsewhere or point site.docs_dir at a different directory." >&2
+    exit 1 ;;
 esac
 
 GENERATOR_REF="$(cfg_get '.pins.generator_ref' '')"
