@@ -34,10 +34,5 @@
   },
   "engines": {
     "node": ">=18.0"
-  },
-  "pnpm": {
-    "overrides": {
-      "webpackbar": "^7.0.0"
-    }
   }
 }

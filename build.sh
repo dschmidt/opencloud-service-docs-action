@@ -31,9 +31,8 @@ done
 # cfg_get <yq-path> <default>
 cfg_get() {
   local v
-  # NB: no jq-style `// ""` fallback here — it treats a boolean `false` as
-  # empty and would silently swap it for the default. Read the raw value and
-  # handle the missing/null case explicitly instead.
+  # A missing key yields "null"; real values (including boolean false) pass
+  # through unchanged.
   v="$(yq -r "$1" "$CONFIG_PATH" 2>/dev/null)"
   if [ -z "$v" ] || [ "$v" = "null" ] || [ "$v" = "auto" ]; then
     printf '%s' "$2"
@@ -251,7 +250,7 @@ EOF
   # ERR_PNPM_IGNORED_BUILDS for deps that ship postinstall scripts (e.g.
   # core-js). The theme deps are pinned, so allowing their build scripts here
   # is safe and keeps the install non-interactive.
-  pnpm install --prefer-frozen-lockfile --config.dangerouslyAllowAllBuilds=true
+  pnpm install --frozen-lockfile --config.dangerouslyAllowAllBuilds=true
   echo "==> pnpm build"
   pnpm build
 )

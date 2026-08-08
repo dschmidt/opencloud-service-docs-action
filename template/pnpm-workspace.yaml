@@ -1,0 +1,5 @@
+# pnpm reads dependency overrides from here (pnpm 10.10+ moved them out of the
+# package.json "pnpm" field). webpackbar 7 is required for the ProgressPlugin
+# options schema of current webpack 5.
+overrides:
+  webpackbar: ^7.0.0
