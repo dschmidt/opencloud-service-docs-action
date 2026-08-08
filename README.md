@@ -240,7 +240,7 @@ bootstrap script that clones this action at the SHA pinned in your workflow
 and invokes `build.sh`:
 
 ```bash
-# dev/docs-run.sh
+# dev/build-docs.sh
 #!/usr/bin/env bash
 set -euo pipefail
 REF="$(grep -oE 'dschmidt/opencloud-service-docs-action@[^ "]+' \
@@ -257,7 +257,7 @@ exec bash "$DIR/build.sh"
 ```makefile
 # Makefile
 docs:
-	bash dev/docs-run.sh
+	bash dev/build-docs.sh
 
 docs-serve-prod:
 	cd .cache/service-docs/site && pnpm run serve
