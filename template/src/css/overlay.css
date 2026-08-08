@@ -3,3 +3,29 @@
  * build time). Use this to override or extend upstream styling without
  * modifying AGPL-sourced CSS in place.
  */
+
+/*
+ * Announcement bar (site.announcement in opencloud-service.yml): styled as
+ * a status/warning banner. Docusaurus generates hashed class names, hence
+ * the prefix selectors. height:auto lets long notices wrap on small screens
+ * instead of clipping at the fixed 30px the theme assumes.
+ */
+div[class^='announcementBar_'] {
+  height: auto;
+  padding: 0.4rem 2rem;
+  background: #fff3cd;
+  color: #664d03;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(102, 77, 3, 0.25);
+}
+
+div[class^='announcementBar_'] a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+[data-theme='dark'] div[class^='announcementBar_'] {
+  background: #3d3117;
+  color: #ffda6a;
+  border-bottom-color: rgba(255, 218, 106, 0.25);
+}
