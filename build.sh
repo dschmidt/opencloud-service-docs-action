@@ -12,7 +12,7 @@ case "$CONFIG_PATH_INPUT" in
   /*) CONFIG_PATH="$CONFIG_PATH_INPUT" ;;
   *)  CONFIG_PATH="$REPO_ROOT/$CONFIG_PATH_INPUT" ;;
 esac
-WORK_DIR="$REPO_ROOT/.github/docs/.cache"
+WORK_DIR="$REPO_ROOT/.cache/service-docs"
 DEFAULT_OUT="$WORK_DIR/site-build"
 OUT_DIR="${DOCS_OUTPUT:-$DEFAULT_OUT}"
 [ -n "$OUT_DIR" ] || OUT_DIR="$DEFAULT_OUT"
@@ -297,9 +297,10 @@ mkdir -p "$(dirname "$OUT_DIR")"
 cp -R "$SITE_DIR/build" "$OUT_DIR"
 
 # ----- step 12: sweep stray generator artifact ------------------------------
-# Upstream template writes to ../../docs/services/_includes/ which, under our
-# cwd, escapes into .github/docs/docs/. Sweep away.
-rm -rf "$REPO_ROOT/.github/docs/docs"
+# Upstream template writes to ../../docs/services/_includes/ relative to the
+# generator's cwd ($WORK_DIR/generator), escaping into $WORK_DIR/../docs/
+# (i.e. .cache/docs/ — NOT the repo's docs/). Sweep away.
+rm -rf "$(dirname "$WORK_DIR")/docs"
 
 # ----- step 13: action output -----------------------------------------------
 if [ -n "${GITHUB_OUTPUT:-}" ]; then

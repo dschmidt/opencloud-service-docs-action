@@ -95,7 +95,7 @@ script.
 | Input         | Required | Default                                  | Purpose                                             |
 |---------------|:--------:|------------------------------------------|-----------------------------------------------------|
 | `config-path` | no       | `.github/docs/opencloud-service.yml`     | Repo-relative path to the service config.           |
-| `output-path` | no       | `<repo>/.github/docs/.cache/site-build`  | Where to place the built site. Absolute or relative. |
+| `output-path` | no       | `<repo>/.cache/service-docs/site-build`  | Where to place the built site. Absolute or relative. |
 
 ## Outputs
 
@@ -170,8 +170,8 @@ The template ships four pages: an overview (`intro.md`) plus the three
 generated configuration pages. Anything the service repo puts under
 `site.docs_dir` (default: the repo's `docs/` directory) is copied **over**
 the template's `docs/` tree before the site builds — docs content lives in
-the repo like any other source; only the action's config and cache stay
-under `.github/docs/`:
+the repo like any other source; only the action's config stays under
+`.github/docs/`, and build scratch goes to `.cache/service-docs/`:
 
 - A file at the same relative path **replaces** the template page —
   `docs/intro.md` replaces the default overview (keep its front matter:
@@ -187,9 +187,9 @@ holds content *not* meant for the site (ADRs, internal notes) should point
 `site.docs_dir` at a subdirectory (e.g. `docs/site`) or elsewhere. The
 build refuses to run if the output path (`DOCS_OUTPUT`) lies inside the
 overlay dir — otherwise a second run would re-publish the previously built
-HTML as pages. Also don't put the overlay at `.github/docs/docs/`: that
-path is swept after every build (an upstream generator template writes a
-stray artifact there).
+HTML as pages. Also don't put the overlay at `.cache/docs/`: that path is
+swept after every build (an upstream generator template writes a stray
+artifact there).
 
 ### `shared.Commons` handling
 
@@ -211,15 +211,15 @@ is to promote a `Log` section into your service's own `Config` struct.
 
 1. Parse `opencloud-service.yml` via `yq`, resolve defaults and autodetection.
 2. Resolve the opencloud version via `go list -m` against the service's `go.mod`.
-3. Clone `opencloud-eu/markdown-docs-generator` at `pins.generator_ref` into `<repo>/.github/docs/.cache/generator/`.
-4. `go mod download` opencloud at the resolved version; copy from GOMODCACHE into `<repo>/.github/docs/.cache/generator/tmp/`.
+3. Clone `opencloud-eu/markdown-docs-generator` at `pins.generator_ref` into `<repo>/.cache/service-docs/generator/`.
+4. `go mod download` opencloud at the resolved version; copy from GOMODCACHE into `<repo>/.cache/service-docs/generator/tmp/`.
 5. Wipe every pre-existing `services/<x>/` directory under `tmp/`.
 6. Render `shim/defaultconfig.go.tmpl` into `tmp/services/<service.name>/pkg/config/defaults/defaultconfig.go`. The shim delegates to the real `FullDefaultConfig()` via the module's import path (so reflection walks the real struct tags).
 7. Copy the service README to `tmp/services/<service.name>/README.md`.
 8. Patch the generator's `go.mod` with `require` + `replace` for the service module, bump the Go directive defensively, `go mod tidy`.
 9. Run `go run ./cmd/dochelpers templates` and `service-index`.
-10. Clone `opencloud-eu/docs` at `pins.theme_ref` into `<repo>/.github/docs/.cache/theme/`.
-11. Synthesize the site in `<repo>/.github/docs/.cache/site/`:
+10. Clone `opencloud-eu/docs` at `pins.theme_ref` into `<repo>/.cache/service-docs/theme/`.
+11. Synthesize the site in `<repo>/.cache/service-docs/site/`:
     - Copy `template/` from the action.
     - Copy the service's docs overlay (`site.docs_dir`, if present) over `docs/`.
     - Render `docusaurus.config.ts.tmpl` via `envsubst` (including the optional announcement bar).
@@ -228,7 +228,7 @@ is to promote a `Log` section into your service's own `Config` struct.
     - Drop generator outputs into `static/env-vars/`.
     - Write AGPL `LICENSE` + `ATTRIBUTION.md` into `static/`.
 12. `pnpm install --prefer-frozen-lockfile && pnpm build`.
-13. Copy `<site>/build/` → `$DOCS_OUTPUT` (default `.github/docs/.cache/site-build/`; must not lie inside the docs overlay dir). The build stays in place at `.cache/site/build/` so `pnpm run serve` in the cache dir just works.
+13. Copy `<site>/build/` → `$DOCS_OUTPUT` (default `.cache/service-docs/site-build/`; must not lie inside the docs overlay dir). The build stays in place at `.cache/service-docs/site/build/` so `pnpm run serve` in the cache dir just works.
 14. Sweep the stray `docs/services/_includes/` directory the upstream generator template writes (it's hardcoded with a relative path that escapes its cwd).
 
 ## Local development
@@ -243,7 +243,7 @@ and invokes `build.sh`:
 set -euo pipefail
 REF="$(grep -oE 'dschmidt/opencloud-service-docs-action@[^ "]+' \
          .github/workflows/docs.yml | head -1 | cut -d@ -f2)"
-DIR=".github/docs/.cache/action"
+DIR=".cache/service-docs/action"
 if [ "$(git -C "$DIR" rev-parse HEAD 2>/dev/null)" != "$REF" ]; then
   rm -rf "$DIR"
   git clone https://github.com/dschmidt/opencloud-service-docs-action.git "$DIR"
@@ -258,10 +258,10 @@ docs:
 	bash .github/docs/run.sh
 
 docs-serve-prod:
-	cd .github/docs/.cache/site && pnpm run serve
+	cd .cache/service-docs/site && pnpm run serve
 
 docs-clean:
-	rm -rf .github/docs/.cache
+	rm -rf .cache/service-docs
 ```
 
 Then `make docs` reproduces the CI build locally at the same pinned SHA.
@@ -271,8 +271,9 @@ no duplication in `opencloud-service.yml` or elsewhere.
 ## Caching
 
 Within a single run's working tree, clones are reused across invocations:
-if `.cache/generator/`, `.cache/theme/`, and the opencloud unpack under
-`.cache/generator/tmp/` are already at the pinned refs/versions, they're not
+if `.cache/service-docs/generator/`, `.cache/service-docs/theme/`, and the
+opencloud unpack under `.cache/service-docs/generator/tmp/` are already at
+the pinned refs/versions, they're not
 re-fetched. The opencloud pin is tracked via a `.opencloud-version` marker
 file (since `go mod download` unpacks a tarball, not a git tree).
 
